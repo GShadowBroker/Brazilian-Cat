@@ -11,10 +11,13 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private LayerMask m_WhatIsGround;                          // A mask determining what is ground to the character
     [SerializeField] private Transform m_GroundCheck;                           // A position marking where to check if the player is grounded.
     [SerializeField] private Transform m_CeilingCheck;                          // A position marking where to check for ceilings
+    [SerializeField] private Transform m_WallCheck;                          // A position marking where to check for walls
     [SerializeField] private Collider2D m_CrouchDisableCollider;                // A collider that will be disabled when crouching
 
     private float groundedRadius = .33f; // Radius of the overlap circle to determine if grounded
     public bool m_Grounded;            // Whether or not the player is grounded.
+    // public bool m_Walled;
+    private bool isDashing;
     const float k_CeilingRadius = .2f; // Radius of the overlap circle to determine if the player can stand up
     private Rigidbody2D m_Rigidbody2D;
     private bool m_FacingRight = true;  // For determining which way the player is currently facing.
@@ -50,16 +53,29 @@ public class PlayerController : MonoBehaviour
 
         // The player is grounded if a circlecast to the groundcheck position hits anything designated as ground
         // This can be done using layers instead but Sample Assets will not overwrite your project settings.
-        Collider2D[] colliders = Physics2D.OverlapCircleAll(m_GroundCheck.position, groundedRadius, m_WhatIsGround);
-        for (int i = 0; i < colliders.Length; i++)
+        Collider2D[] groundColliders = Physics2D.OverlapCircleAll(m_GroundCheck.position, groundedRadius, m_WhatIsGround);
+        for (int i = 0; i < groundColliders.Length; i++)
         {
-            if (colliders[i].gameObject != gameObject)
+            if (groundColliders[i].gameObject != gameObject)
             {
                 m_Grounded = true;
-                if (!wasGrounded)
-                    OnLandEvent.Invoke();
+                if (!wasGrounded) OnLandEvent.Invoke();
             }
         }
+
+        // Check if there's a wall in front
+        // bool isWalled = false;
+        // Collider2D[] wallColliders = Physics2D.OverlapCircleAll(m_WallCheck.position, 0.25f, m_WhatIsGround);
+
+        // for (int i = 0; i < wallColliders.Length; i++)
+        // {
+        //     if (wallColliders[i].gameObject != gameObject)
+        //     {
+        //         isWalled = true;
+        //     }
+        // }
+
+        // m_Walled = isWalled;
     }
 
 
@@ -109,7 +125,9 @@ public class PlayerController : MonoBehaviour
             }
 
             // Move the character by finding the target velocity
+
             Vector3 targetVelocity = new Vector2(move * 10f, m_Rigidbody2D.velocity.y);
+
             // And then smoothing it out and applying it to the character
             m_Rigidbody2D.velocity = Vector3.SmoothDamp(m_Rigidbody2D.velocity, targetVelocity, ref m_Velocity, m_MovementSmoothing);
 
@@ -145,5 +163,20 @@ public class PlayerController : MonoBehaviour
         Vector3 theScale = transform.localScale;
         theScale.x *= -1;
         transform.localScale = theScale;
+
+        // update wall check position
+        if (!m_FacingRight)
+        {
+            m_WallCheck.position = new Vector3(transform.position.x - 0.5f, m_WallCheck.position.y, m_WallCheck.position.z);
+        }
+        else
+        {
+            m_WallCheck.position = new Vector3(transform.position.x + 0.5f, m_WallCheck.position.y, m_WallCheck.position.z);
+        }
+    }
+
+    public void handleDashEvent(bool dashing)
+    {
+        isDashing = dashing;
     }
 }

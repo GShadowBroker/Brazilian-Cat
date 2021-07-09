@@ -1,11 +1,18 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Events;
 
 public class PlayerMovement : MonoBehaviour
 {
     public float movementSpeed = 40f;
     public PlayerController controller;
     public GameObject smokeEffect;
+
+    // Audio
+    public AudioSource jumpSound;
+    public AudioSource dashSound;
+    public AudioSource landingSound;
+
     private ParticleSystem smokeParticles;
     private GameObject instanceOfSmoke;
     private PlayerState player;
@@ -13,6 +20,11 @@ public class PlayerMovement : MonoBehaviour
     private Animator animator;
     private Vector2 movement;
     private bool jumping;
+
+    [System.Serializable]
+    public class DashEvent : UnityEvent<bool> { };
+    public DashEvent dashEvent;
+
     private float timeSinceJump = 0f;
     private float timeSinceDash = 1f;
     private float fallDeathThreshold = -3f;
@@ -22,6 +34,11 @@ public class PlayerMovement : MonoBehaviour
     private void Awake()
     {
         movement = new Vector2();
+
+        if (dashEvent == null)
+        {
+            dashEvent = new DashEvent();
+        }
     }
 
     private void Start()
@@ -51,12 +68,20 @@ public class PlayerMovement : MonoBehaviour
             animator.SetBool("Grounded", true);
         }
 
+        if (timeSinceDash > 0.2f)
+        {
+            animator.SetBool("Dash", false);
+            dashEvent.Invoke(false);
+        }
+
         timeSinceJump += Time.fixedDeltaTime;
         timeSinceDash += Time.fixedDeltaTime;
     }
 
     public void Move(InputAction.CallbackContext context)
     {
+        if (player.dead) return;
+
         // set movement
         movement.x = context.ReadValue<Vector2>().x * movementSpeed;
 
@@ -66,12 +91,17 @@ public class PlayerMovement : MonoBehaviour
 
     public void Jump(InputAction.CallbackContext context)
     {
+        if (player.dead) return;
+
         if (context.started && controller.m_Grounded && timeSinceJump > 0.2f)
         {
             jumping = true;
             timeSinceJump = 0f;
             animator.SetBool("Grounded", false);
             animator.SetTrigger("Jump");
+
+            // audio
+            jumpSound.Play();
         }
 
         else if (!context.performed)
@@ -83,9 +113,14 @@ public class PlayerMovement : MonoBehaviour
 
     public void Dash(InputAction.CallbackContext context)
     {
+
+        if (player.dead) return;
+
         if (context.started && timeSinceDash > dashCooldownTime)
         {
-            Debug.Log("dash!");
+            // audio
+            dashSound.Play();
+
             rb.AddForce(new Vector2(transform.localScale.x > 0 ? dashForce : -dashForce, 0f));
             timeSinceDash = 0f;
 
@@ -94,13 +129,17 @@ public class PlayerMovement : MonoBehaviour
             smokeParticles.Play();
 
             // play animation
-            animator.SetTrigger("Dash");
+            animator.SetBool("Dash", true);
+            dashEvent.Invoke(true);
         }
     }
 
     public void OnTouchGround()
     {
         if (player.dead) return;
+
+        // audio
+        // landingSound.Play();
 
         // leave smoke
         instanceOfSmoke.transform.position = new Vector3(transform.position.x, transform.position.y - 0.75f, -20f);

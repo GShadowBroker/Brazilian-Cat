@@ -1,11 +1,15 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Cinemachine;
+using UnityEngine.Events;
 
 public class PlayerState : MonoBehaviour
 {
     public CinemachineVirtualCamera vcam1;
     public CinemachineVirtualCamera vcam2;
+
+    public AudioSource dyingSound;
+    public AudioSource scoreSound;
 
     public Vector2 dyingJumpForce = new Vector2(250f, 500f);
     private Animator screenAnimator;
@@ -19,6 +23,12 @@ public class PlayerState : MonoBehaviour
     private bool zoomingIn = false;
     public bool dead;
 
+    public int score = 0;
+
+    [System.Serializable]
+    public class ScoreUpdateEvent : UnityEvent<int> { };
+    public ScoreUpdateEvent scoreChanged;
+
     void Start()
     {
         screenAnimator = GameObject.FindWithTag("FadeScreen").GetComponent<Animator>();
@@ -26,6 +36,11 @@ public class PlayerState : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         collision = GetComponent<CircleCollider2D>();
         playerMovement = GetComponent<PlayerMovement>();
+
+        if (scoreChanged == null)
+        {
+            scoreChanged = new ScoreUpdateEvent();
+        }
     }
 
     private void Update()
@@ -47,6 +62,9 @@ public class PlayerState : MonoBehaviour
 
     public void Die(bool playScaredAnimation)
     {
+        // audio
+        dyingSound.Play();
+
         dead = true;
         // switch camera
         vcam1.Priority = 0;
@@ -69,5 +87,15 @@ public class PlayerState : MonoBehaviour
 
         screenAnimator.SetTrigger("FadeOut");
         fadingOut = true;
+
+        // reset score
+        scoreChanged.Invoke(0);
+    }
+
+    public void IncrementScore()
+    {
+        scoreSound.Play();
+        score++;
+        scoreChanged.Invoke(score);
     }
 }
