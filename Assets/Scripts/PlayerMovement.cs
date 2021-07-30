@@ -55,7 +55,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (transform.position.y < fallDeathThreshold)
         {
-            player.Die(false);
+            player.Die(false, true);
             return;
         }
 

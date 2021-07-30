@@ -34,7 +34,7 @@ public class CorujaAI : MonoBehaviour
     {
         if (collision.collider.GetComponent<PlayerController>() != null)
         {
-            player.Die(true);
+            player.Die(true, true);
         }
     }
 }

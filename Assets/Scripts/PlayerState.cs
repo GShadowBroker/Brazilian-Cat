@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Cinemachine;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 
 public class PlayerState : MonoBehaviour
 {
@@ -16,7 +17,7 @@ public class PlayerState : MonoBehaviour
     private Animator playerAnimator;
     private Rigidbody2D rb;
     private CircleCollider2D collision;
-    private PlayerMovement playerMovement;
+    private PlayerInput playerInput;
     private bool fadingOut = false;
     private float fadingTimer = 0f;
     public float fadingDuration = 2f;
@@ -35,7 +36,7 @@ public class PlayerState : MonoBehaviour
         playerAnimator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
         collision = GetComponent<CircleCollider2D>();
-        playerMovement = GetComponent<PlayerMovement>();
+        playerInput = GetComponent<PlayerInput>();
 
         if (scoreChanged == null)
         {
@@ -60,12 +61,10 @@ public class PlayerState : MonoBehaviour
         if (fadingOut) fadingTimer += Time.deltaTime;
     }
 
-    public void Die(bool playScaredAnimation)
+    public void Die(bool playScaredAnimation, bool playScaredSound)
     {
-        // audio
-        dyingSound.Play();
-
         dead = true;
+
         // switch camera
         vcam1.Priority = 0;
         vcam2.Priority = 10;
@@ -74,8 +73,11 @@ public class PlayerState : MonoBehaviour
         vcam1.Follow = null;
         vcam2.Follow = null;
 
-        playerMovement.enabled = false;
-        collision.enabled = false;
+        playerInput.enabled = false;
+        if (playScaredSound) collision.enabled = false;
+
+        // audio
+        if (playScaredSound) dyingSound.Play();
 
         if (playScaredAnimation)
         {
@@ -97,5 +99,17 @@ public class PlayerState : MonoBehaviour
         scoreSound.Play();
         score++;
         scoreChanged.Invoke(score);
+    }
+
+    public void PausePlayer(bool isPaused)
+    {
+        if (Time.timeScale == 0)
+        {
+            playerInput.enabled = false;
+        }
+        else
+        {
+            playerInput.enabled = true;
+        }
     }
 }

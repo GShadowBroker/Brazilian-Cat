@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Spike : MonoBehaviour
+public class Checkpoint : MonoBehaviour
 {
     private PlayerState player;
     private void Start()
@@ -9,9 +9,9 @@ public class Spike : MonoBehaviour
     }
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.collider.GetComponent<PlayerController>() != null && collision.contacts[0].normal.y < -0.5)
+        if (collision.collider.GetComponent<PlayerController>() != null)
         {
-            player.Die(true, true);
+            player.Die(false, false);
         }
     }
 }

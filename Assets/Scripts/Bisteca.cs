@@ -4,7 +4,7 @@ public class Bisteca : MonoBehaviour
 {
     public float movementRadius = 0.5f;
     public float deadZone = 0.1f;
-    public float smoothing = 0.1f;
+    public float smoothing = 0.75f;
     private bool goingUp;
     private Vector3 startingPos;
     private Vector3 upperLimit;
@@ -21,13 +21,15 @@ public class Bisteca : MonoBehaviour
 
     private void Update()
     {
+        // if (Time.timeScale == 0) return;
+
         if (goingUp)
         {
-            transform.position = Vector3.MoveTowards(transform.position, upperLimit, smoothing);
+            transform.position = Vector3.MoveTowards(transform.position, upperLimit, smoothing * Time.deltaTime);
         }
         else
         {
-            transform.position = Vector3.MoveTowards(transform.position, bottomLimit, smoothing);
+            transform.position = Vector3.MoveTowards(transform.position, bottomLimit, smoothing * Time.deltaTime);
         }
 
 

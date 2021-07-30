@@ -123,4 +123,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   movementRadius: 0.5
-  smoothing: 0.0075
+  deadZone: 0.1
+  smoothing: 0.75
